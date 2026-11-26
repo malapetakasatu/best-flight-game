@@ -1,0 +1,6 @@
+[
+  { "name": "1-chase.png", "query": "?shot=chase&seed=1" },
+  { "name": "2-cockpit.png", "query": "?shot=cockpit&seed=1" },
+  { "name": "3-canyon.png", "query": "?shot=canyon&seed=1" },
+  { "name": "4-landing.png", "query": "?shot=landing&seed=1" }
+]

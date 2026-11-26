@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>AeroStrike X-35 Valkyrie - Tactical Flight Simulator</title>
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <!-- 3D WebGL Canvas Layer -->
+  <div id="canvas-container">
+    <canvas id="game-canvas"></canvas>
+    <!-- Crisp 2D Military HUD Canvas Overlay -->
+    <canvas id="hud-canvas"></canvas>
+  </div>
+
+  <!-- Cockpit & Telemetry Overlay -->
+  <div id="ui-overlay">
+    <!-- Top Mission Status Banner -->
+    <header class="top-nav">
+      <div class="nav-left">
+        <span class="callsign-tag">CALLSIGN: VALKYRIE-1</span>
+        <span class="mission-pill" id="hud-mission-name">MISSION: CANYON RUN</span>
+      </div>
+      <div class="nav-center">
+        <div class="objective-box">
+          <span class="obj-label">OBJECTIVE:</span>
+          <span class="obj-text" id="hud-objective">NAVIGATE CANYON RINGS (0/10)</span>
+        </div>
+      </div>
+      <div class="nav-right">
+        <span class="timer-tag" id="hud-timer">TIME: 00:00.0</span>
+        <span class="score-tag" id="hud-score">SCORE: 0</span>
+      </div>
+    </header>
+
+    <!-- Bottom Flight Data Telemetry -->
+    <footer class="bottom-telemetry">
+      <div class="telem-card">
+        <div class="telem-label">AIRSPEED</div>
+        <div class="telem-val" id="telem-speed">0 <span class="telem-unit">KTS</span></div>
+        <div class="telem-sub" id="telem-mach">MACH 0.00</div>
+      </div>
+      <div class="telem-card">
+        <div class="telem-label">ALTITUDE</div>
+        <div class="telem-val" id="telem-alt">0 <span class="telem-unit">FT</span></div>
+        <div class="telem-sub" id="telem-agl">AGL: 0 FT</div>
+      </div>
+      <div class="telem-card">
+        <div class="telem-label">THROTTLE</div>
+        <div class="telem-val text-cyan" id="telem-thr">0%</div>
+        <div class="telem-sub" id="telem-ab">MILITARY POWER</div>
+      </div>
+      <div class="telem-card">
+        <div class="telem-label">G-FORCE</div>
+        <div class="telem-val text-emerald" id="telem-g">+1.0 G</div>
+        <div class="telem-sub" id="telem-aoa">AoA: +2.1&deg;</div>
+      </div>
+      <div class="telem-card">
+        <div class="telem-label">FUEL REMAINING</div>
+        <div class="telem-val text-amber" id="telem-fuel">100%</div>
+        <div class="telem-sub" id="telem-status">SYSTEMS NOMINAL</div>
+      </div>
+      <div class="telem-card flags-card">
+        <div class="flag-pill" id="flag-gear">GEAR DOWN</div>
+        <div class="flag-pill" id="flag-flaps">FLAPS</div>
+        <div class="flag-pill" id="flag-brake">AIRBRAKE</div>
+      </div>
+    </footer>
+
+    <!-- Master Caution / Warning Banner -->
+    <div class="master-warning hidden" id="master-warning">
+      <span class="warning-icon">&#9888;</span>
+      <span class="warning-text" id="warning-text">STALL WARNING - PULL DOWN NOSE</span>
+    </div>
+
+    <!-- Controls Quick Reference Box -->
+    <div class="controls-hint" id="controls-hint">
+      <span><b>W/S</b>: Pitch</span> &bull; 
+      <span><b>A/D</b>: Roll</span> &bull; 
+      <span><b>Q/E</b>: Rudder</span> &bull; 
+      <span><b>SHIFT/CTRL</b>: Throttle</span> &bull; 
+      <span><b>SPACE</b>: Afterburner</span> &bull; 
+      <span><b>G</b>: Gear</span> &bull; 
+      <span><b>B</b>: Airbrake</span> &bull; 
+      <span><b>C</b>: Camera (Chase/Cockpit)</span>
+    </div>
+  </div>
+
+  <!-- Mission Briefing & Launch Modal -->
+  <div class="modal-backdrop" id="briefing-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="insignia-icon">&#9650;</div>
+        <div>
+          <h1 class="modal-title">AEROSTRIKE <span class="accent-title">X-35 VALKYRIE</span></h1>
+          <p class="modal-subtitle">High-Fidelity Tactical Flight Simulator &bull; Naval Air Station Kodiak</p>
+        </div>
+      </div>
+
+      <div class="modal-body">
+        <div class="mission-select-section">
+          <label class="section-label">SELECT SORTIE MISSION:</label>
+          <div class="mission-grid">
+            <button class="mission-btn active" data-mission="1">
+              <span class="m-num">SORTIE 01</span>
+              <strong class="m-title">Top Gun Canyon Run</strong>
+              <span class="m-desc">Low-altitude high-G supersonic ring navigation through Devil's Gorge.</span>
+            </button>
+            <button class="mission-btn" data-mission="2">
+              <span class="m-num">SORTIE 02</span>
+              <strong class="m-title">Island Airspace Intercept</strong>
+              <span class="m-desc">Intercept radar beacons across the archipelago before fuel depletion.</span>
+            </button>
+            <button class="mission-btn" data-mission="3">
+              <span class="m-num">SORTIE 03</span>
+              <strong class="m-title">Airbase Runway Recovery</strong>
+              <span class="m-desc">Execute glide slope approach, gear touchdown, and flare landing on Runway 09.</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="aircraft-specs-box">
+          <div class="spec-row"><span>Airframe:</span><strong>AeroStrike X-35 Twin-Turbofan Interceptor</strong></div>
+          <div class="spec-row"><span>Aerodynamics:</span><strong>6-DOF Rigid-Body Aerodynamic Physics (Lift, Induced Drag, AoA Stall)</strong></div>
+          <div class="spec-row"><span>Engine Max Thrust:</span><strong>210 kN with Afterburner Boost</strong></div>
+          <div class="spec-row"><span>Avionics:</span><strong>Glass Cockpit HUD with Pitch Ladder, FPM, and Velocity Vector</strong></div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-launch" id="btn-launch-mission">
+          <span class="launch-icon">&#9654;</span> INITIATE SORTIE (START ENGINE)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Debriefing & Mission Results Modal -->
+  <div class="modal-backdrop hidden" id="debrief-modal">
+    <div class="modal-card debrief-card">
+      <div class="modal-header">
+        <div>
+          <h2 class="modal-title" id="debrief-title">SORTIE COMPLETED</h2>
+          <p class="modal-subtitle" id="debrief-subtitle">Flight Data Recorder Telemetry Analysis</p>
+        </div>
+      </div>
+      <div class="modal-body">
+        <div class="debrief-stats-grid">
+          <div class="stat-box">
+            <span class="stat-lbl">MISSION RESULT</span>
+            <strong class="stat-val text-emerald" id="d-result">SUCCESS</strong>
+          </div>
+          <div class="stat-box">
+            <span class="stat-lbl">FLIGHT TIME</span>
+            <strong class="stat-val text-cyan" id="d-time">01:42.5</strong>
+          </div>
+          <div class="stat-box">
+            <span class="stat-lbl">FINAL SCORE</span>
+            <strong class="stat-val text-amber" id="d-score">12,500</strong>
+          </div>
+          <div class="stat-box">
+            <span class="stat-lbl">MAX G-LOAD</span>
+            <strong class="stat-val" id="d-max-g">+5.2 G</strong>
+          </div>
+        </div>
+        <p class="debrief-summary" id="d-summary">Excellent flight discipline. Waypoint gates cleared with optimal pitch attitude and energy retention.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-launch" id="btn-restart-mission">FLY AGAIN (RE-ENGAGE)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Vendored Three.js Engine & Modular Game Scripts -->
+  <script src="vendor/three.min.js"></script>
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>
