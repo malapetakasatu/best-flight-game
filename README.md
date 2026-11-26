@@ -1,6 +1,10 @@
 # AeroStrike X-35 Valkyrie
 
-> **High-Fidelity Tactical Flight Simulator** &bull; Make.fun Bounty Submission for `best-flight-game-20261126-0057`
+[![make.fun · best-flight-game-20261126-0057](https://make.fun/badge/best-flight-game-20261126-0057.svg)](https://make.fun/bounty/best-flight-game-20261126-0057?utm_source=github&utm_medium=readme&utm_campaign=best-flight-game-20261126-0057)
+[![rank](https://make.fun/badge/best-flight-game-20261126-0057/malapetakasatu/best-flight-game/rank.svg)](https://make.fun/bounty/best-flight-game-20261126-0057/leaderboard?utm_source=github&utm_medium=readme&utm_campaign=best-flight-game-20261126-0057)
+[![reward](https://make.fun/badge/best-flight-game-20261126-0057/malapetakasatu/best-flight-game/reward.svg)](https://make.fun/bounty/best-flight-game-20261126-0057?utm_source=github&utm_medium=readme&utm_campaign=best-flight-game-20261126-0057)
+
+> **High-Fidelity Tactical Flight Simulator** &bull; Make.fun Bounty Submission for [`best-flight-game-20261126-0057`](https://make.fun/bounty/best-flight-game-20261126-0057)
 
 A complete, original 3D tactical flight simulator that plays offline in a desktop browser with zero external network requests. Powered by WebGL (Three.js), a custom 6-DOF aerodynamic flight dynamics model, procedural atmospheric scattering, procedural island terrain with an airbase runway and naval aircraft carrier, authentic glass cockpit HUD avionics, and a procedural Web Audio sound synthesizer.
 
