@@ -278,7 +278,7 @@ class AeroStrikeGame {
     }
 
     if (this.domG) this.domG.innerText = `${this.physics.gForce >= 0 ? '+' : ''}${this.physics.gForce.toFixed(1)} G`;
-    if (this.domAoa) this.domAoa.innerHTML = `AoA: ${this.physics.aoaDeg >= 0 ? '+' : ''}${this.physics.aoaDeg.toFixed(1)}&deg;`;
+    if (this.domAoa) this.domAoa.innerHTML = `AoA: ${this.physics.aoaDeg >= 0 ? '+' : ''}${this.physics.aoaDeg.toFixed(1)}&deg; &bull; PITCH: ${((this.physics.quaternion.x * 180) / Math.PI).toFixed(0)}&deg;`;
     if (this.domFuel) this.domFuel.innerText = `${Math.round(this.physics.fuelPercent)}%`;
 
     // Flag indicators

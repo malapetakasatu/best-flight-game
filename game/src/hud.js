@@ -60,7 +60,7 @@ export class FighterHUD {
 
     const pixelsPerDegree = 8.5;
 
-    // Artificial Horizon Line
+    // Artificial Horizon Line & Roll Pointer Arc
     const horizonOffset = pitchDeg * pixelsPerDegree;
     ctx.beginPath();
     ctx.lineWidth = 2.0;
@@ -69,6 +69,15 @@ export class FighterHUD {
     ctx.moveTo(40, horizonOffset);
     ctx.lineTo(160, horizonOffset);
     ctx.stroke();
+
+    // Bank angle sky pointer triangle at horizon center
+    ctx.beginPath();
+    ctx.moveTo(0, horizonOffset - 8);
+    ctx.lineTo(-6, horizonOffset);
+    ctx.lineTo(6, horizonOffset);
+    ctx.closePath();
+    ctx.fillStyle = hudGreen;
+    ctx.fill();
 
     // Pitch Ladder Rungs (-80 to +80 in 10-degree increments)
     ctx.lineWidth = 1.4;
