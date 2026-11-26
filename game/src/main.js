@@ -72,6 +72,7 @@ class AeroStrikeGame {
     this.renderer = new THREE.WebGLRenderer({
       canvas: this.gameCanvas,
       antialias: true,
+      preserveDrawingBuffer: true,
       powerPreference: 'high-performance',
     });
     this.renderer.setSize(window.innerWidth, window.innerHeight);
@@ -106,10 +107,34 @@ class AeroStrikeGame {
       stageScreenshotScene(shotName, this);
       this.render();
       
+      // Composite WebGL 3D world + 2D tactical HUD into backdrop image
+      // guarantees headless Chrome composites full WebGL graphics on headless Linux
+      try {
+        const comp = document.createElement('canvas');
+        comp.width = this.gameCanvas.width;
+        comp.height = this.gameCanvas.height;
+        const ctx = comp.getContext('2d');
+        ctx.drawImage(this.gameCanvas, 0, 0);
+        ctx.drawImage(this.hudCanvas, 0, 0);
+
+        const img = document.createElement('img');
+        img.id = 'shot-backdrop-img';
+        img.style.position = 'absolute';
+        img.style.top = '0';
+        img.style.left = '0';
+        img.style.width = '100%';
+        img.style.height = '100%';
+        img.style.zIndex = '1';
+        img.src = comp.toDataURL('image/png');
+        this.container.appendChild(img);
+      } catch (err) {
+        console.error('Backdrop composite error:', err);
+      }
+
       // Notify headless browser that frame is ready
       setTimeout(() => {
         window.__shotReady = true;
-      }, 250);
+      }, 350);
       return;
     }
 
@@ -380,6 +405,17 @@ class AeroStrikeGame {
   }
 }
 
-window.addEventListener('DOMContentLoaded', () => {
-  new AeroStrikeGame();
-});
+window.game = null;
+
+function bootGame() {
+  if (!window.game) {
+    window.game = new AeroStrikeGame();
+  }
+}
+
+if (document.readyState === 'loading') {
+  window.addEventListener('DOMContentLoaded', bootGame);
+} else {
+  bootGame();
+}
+
