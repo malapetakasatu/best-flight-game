@@ -1,4 +1,4 @@
-// AeroStrike X-35 Valkyrie - Tactical Glass Cockpit Avionics & HUD Overlay
+// AeroStrike X-35 Valkyrie - Tactical Glass Cockpit Avionics & Combat HUD Overlay
 /* global THREE */
 
 export class FighterHUD {
@@ -35,6 +35,7 @@ export class FighterHUD {
     // Tactical HUD Colors
     const hudGreen = '#00ff66';
     const hudCyan = '#00e5ff';
+    const hudGold = '#ffd700';
     const hudAmber = '#ffb700';
     const hudRed = '#ff3344';
 
@@ -44,23 +45,74 @@ export class FighterHUD {
     ctx.fillStyle = hudGreen;
     ctx.font = '12px "SFMono-Regular", Consolas, monospace';
 
+    // ==========================================
+    // TOP TACTICAL MISSION STATUS BANNER
+    // ==========================================
+    ctx.save();
+    // Glass banner background
+    ctx.fillStyle = 'rgba(10, 15, 25, 0.65)';
+    ctx.fillRect(cx - 360, 16, 720, 48);
+    ctx.strokeStyle = 'rgba(0, 229, 255, 0.4)';
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(cx - 360, 16, 720, 48);
+
+    // Header left: Mission title
+    ctx.textAlign = 'left';
+    ctx.font = 'bold 12px "SFMono-Regular", Consolas, monospace';
+    ctx.fillStyle = hudCyan;
+    ctx.fillText('SORTIE: NORDIC GOLDEN SLALOM', cx - 340, 36);
+    ctx.font = '10px "SFMono-Regular", Consolas, monospace';
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('ACTIVE FLIGHT PLAN · ARCHIPELAGO SECTOR 04', cx - 340, 52);
+
+    // Header center: Rings Cleared Badge
+    const nextRing = missionManager.getNextRing();
+    const currentRingIdx = missionManager.currentRingIndex;
+    const totalRings = missionManager.rings.length || 8;
+
+    ctx.textAlign = 'center';
+    ctx.font = 'bold 13px "SFMono-Regular", Consolas, monospace';
+    ctx.fillStyle = hudGold;
+    ctx.fillText(`RINGS: [ ${currentRingIdx} / ${totalRings} ]`, cx, 36);
+    ctx.font = '10px "SFMono-Regular", Consolas, monospace';
+    ctx.fillStyle = '#34d399';
+    ctx.fillText(nextRing ? `NEXT: ${nextRing.name.toUpperCase()}` : 'ALL RINGS CLEARED', cx, 52);
+
+    // Header right: Score & Time
+    ctx.textAlign = 'right';
+    ctx.font = 'bold 13px "SFMono-Regular", Consolas, monospace';
+    ctx.fillStyle = hudGreen;
+    ctx.fillText(`SCORE: ${missionManager.score.toLocaleString()} PTS`, cx + 340, 36);
+    const elapsedSec = Math.floor(missionManager.elapsedTime);
+    const mStr = String(Math.floor(elapsedSec / 60)).padStart(2, '0');
+    const sStr = String(elapsedSec % 60).padStart(2, '0');
+    ctx.font = '10px "SFMono-Regular", Consolas, monospace';
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText(`TIMER: ${mStr}:${sStr} · THREAT: NONE`, cx + 340, 52);
+    ctx.restore();
+
+    // ==========================================
     // 1. Center Waterline / Boresight Crosshair
+    // ==========================================
     ctx.beginPath();
     ctx.moveTo(cx - 24, cy);
+    ctx.lineTo(cx - 8, cy);
     ctx.lineTo(cx - 8, cy);
     ctx.lineTo(cx, cy - 6);
     ctx.lineTo(cx + 8, cy);
     ctx.lineTo(cx + 24, cy);
     ctx.stroke();
 
+    // ==========================================
     // 2. Rotating Artificial Horizon & Pitch Ladder
+    // ==========================================
     ctx.save();
     ctx.translate(cx, cy);
     ctx.rotate(rollRad);
 
     const pixelsPerDegree = 8.5;
 
-    // Artificial Horizon Line & Roll Pointer Arc
+    // Artificial Horizon Line
     const horizonOffset = pitchDeg * pixelsPerDegree;
     ctx.beginPath();
     ctx.lineWidth = 2.0;
@@ -70,7 +122,7 @@ export class FighterHUD {
     ctx.lineTo(160, horizonOffset);
     ctx.stroke();
 
-    // Bank angle sky pointer triangle at horizon center
+    // Bank angle sky pointer triangle
     ctx.beginPath();
     ctx.moveTo(0, horizonOffset - 8);
     ctx.lineTo(-6, horizonOffset);
@@ -84,30 +136,27 @@ export class FighterHUD {
     for (let deg = -80; deg <= 80; deg += 10) {
       if (deg === 0) continue;
       const rungY = (pitchDeg - deg) * pixelsPerDegree;
-      if (Math.abs(rungY) > 240) continue; // Clip off-screen rungs
+      if (Math.abs(rungY) > 240) continue;
 
       const isPositive = deg > 0;
       const halfWidth = isPositive ? 45 : 35;
 
       ctx.beginPath();
       if (!isPositive) {
-        ctx.setLineDash([4, 4]); // Dashed for negative pitch (dive)
+        ctx.setLineDash([4, 4]);
       } else {
-        ctx.setLineDash([]); // Solid for positive pitch (climb)
+        ctx.setLineDash([]);
       }
 
-      // Left rung with vertical tab
       ctx.moveTo(-halfWidth, rungY);
       ctx.lineTo(-20, rungY);
       ctx.lineTo(-20, rungY + (isPositive ? 6 : -6));
 
-      // Right rung with vertical tab
       ctx.moveTo(20, rungY);
       ctx.lineTo(halfWidth, rungY);
       ctx.lineTo(halfWidth, rungY + (isPositive ? 6 : -6));
       ctx.stroke();
 
-      // Pitch angle numerical labels
       ctx.setLineDash([]);
       ctx.textAlign = 'right';
       ctx.fillText(String(Math.abs(deg)), -halfWidth - 6, rungY + 4);
@@ -116,9 +165,10 @@ export class FighterHUD {
     }
     ctx.restore();
 
+    // ==========================================
     // 3. Flight Path Marker (Velocity Vector)
+    // ==========================================
     if (physics.airspeed > 15) {
-      // Project velocity vector onto screen plane
       const velDir = physics.velocity.clone().normalize();
       const lookAt = camera.position.clone().add(velDir.clone().multiplyScalar(100));
       const projected = lookAt.project(camera);
@@ -126,13 +176,11 @@ export class FighterHUD {
       const fpmX = (projected.x * 0.5 + 0.5) * this.width;
       const fpmY = (-(projected.y * 0.5) + 0.5) * this.height;
 
-      // Only draw if inside screen bounds
       if (fpmX > 40 && fpmX < this.width - 40 && fpmY > 40 && fpmY < this.height - 40) {
         ctx.save();
         ctx.strokeStyle = hudCyan;
         ctx.lineWidth = 2.0;
 
-        // FPM Circle with horizontal wings and top fin
         ctx.beginPath();
         ctx.arc(fpmX, fpmY, 8, 0, Math.PI * 2);
         ctx.moveTo(fpmX - 8, fpmY);
@@ -146,7 +194,9 @@ export class FighterHUD {
       }
     }
 
+    // ==========================================
     // 4. Airspeed Tape (Left side, in Knots)
+    // ==========================================
     const speedKts = Math.round(physics.airspeed * 1.94384);
     const tapeLeft = cx - 240;
     ctx.beginPath();
@@ -178,7 +228,9 @@ export class FighterHUD {
     ctx.font = 'bold 13px "SFMono-Regular", Consolas, monospace';
     ctx.fillText(String(speedKts), tapeLeft - 32, cy + 4);
 
+    // ==========================================
     // 5. Altitude Tape (Right side, in Feet MSL)
+    // ==========================================
     const altFt = Math.round(physics.altitude * 3.28084);
     const tapeRight = cx + 240;
     ctx.beginPath();
@@ -207,8 +259,10 @@ export class FighterHUD {
     ctx.textAlign = 'center';
     ctx.fillText(String(altFt), tapeRight + 37, cy + 4);
 
-    // 6. Heading Compass Tape (Top, 000° to 359°)
-    const compassY = cy - 200;
+    // ==========================================
+    // 6. Heading Compass Tape (Top)
+    // ==========================================
+    const compassY = cy - 180;
     ctx.beginPath();
     ctx.moveTo(cx - 180, compassY);
     ctx.lineTo(cx + 180, compassY);
@@ -245,7 +299,9 @@ export class FighterHUD {
     ctx.closePath();
     ctx.fill();
 
-    // 7. G-Meter & G-Load Warning
+    // ==========================================
+    // 7. G-Meter, AoA, Mach
+    // ==========================================
     ctx.textAlign = 'left';
     ctx.font = 'bold 12px "SFMono-Regular", Consolas, monospace';
     ctx.fillStyle = physics.gForce > 6.0 ? hudRed : hudGreen;
@@ -253,8 +309,27 @@ export class FighterHUD {
     ctx.fillText(`AoA: ${physics.aoaDeg.toFixed(1)}°`, cx - 235, cy + 195);
     ctx.fillText(`MACH: ${physics.mach.toFixed(2)}`, cx - 235, cy + 215);
 
-    // 8. Radar Waypoint Diamond Bug (Project next mission ring)
-    const nextRing = missionManager.getNextRing();
+    // ==========================================
+    // 8. Systems Status Box (Bottom Right)
+    // ==========================================
+    ctx.save();
+    ctx.fillStyle = 'rgba(10, 15, 25, 0.65)';
+    ctx.fillRect(cx + 170, cy + 155, 150, 75);
+    ctx.strokeStyle = 'rgba(0, 255, 102, 0.3)';
+    ctx.strokeRect(cx + 170, cy + 155, 150, 75);
+
+    ctx.font = '10px "SFMono-Regular", Consolas, monospace';
+    ctx.fillStyle = physics.gear ? hudAmber : hudGreen;
+    ctx.fillText(`GEAR:    ${physics.gear ? 'DOWN / LOCKED' : 'UP / RETRACTED'}`, cx + 180, cy + 175);
+    ctx.fillStyle = physics.flaps ? hudAmber : hudGreen;
+    ctx.fillText(`FLAPS:   ${physics.flaps ? 'FULL 30°' : 'CLEAN / 0°'}`, cx + 180, cy + 193);
+    ctx.fillStyle = physics.afterburner ? hudGold : hudGreen;
+    ctx.fillText(`ENGINE:  ${physics.afterburner ? 'STAGE 2 BURNER' : 'MIL POWER'}`, cx + 180, cy + 211);
+    ctx.restore();
+
+    // ==========================================
+    // 9. Radar Waypoint Diamond Bug
+    // ==========================================
     if (nextRing) {
       const ringPos = nextRing.position.clone();
       const projected = ringPos.project(camera);
@@ -263,34 +338,33 @@ export class FighterHUD {
         const ringY = (-(projected.y * 0.5) + 0.5) * this.height;
 
         ctx.save();
-        ctx.strokeStyle = hudAmber;
-        ctx.lineWidth = 2.0;
+        ctx.strokeStyle = hudGold;
+        ctx.lineWidth = 2.5;
 
-        // Waypoint Diamond
+        // Waypoint Diamond with Inner Target Dot
         ctx.beginPath();
-        ctx.moveTo(ringX, ringY - 14);
-        ctx.lineTo(ringX + 14, ringY);
-        ctx.lineTo(ringX, ringY + 14);
-        ctx.lineTo(ringX - 14, ringY);
+        ctx.moveTo(ringX, ringY - 16);
+        ctx.lineTo(ringX + 16, ringY);
+        ctx.lineTo(ringX, ringY + 16);
+        ctx.lineTo(ringX - 16, ringY);
         ctx.closePath();
         ctx.stroke();
 
+        ctx.beginPath();
+        ctx.arc(ringX, ringY, 3, 0, Math.PI * 2);
+        ctx.fillStyle = hudGold;
+        ctx.fill();
+
         const distM = Math.round(physics.position.distanceTo(ringPos));
-        ctx.fillStyle = hudAmber;
+        ctx.fillStyle = hudGold;
         ctx.textAlign = 'center';
-        ctx.fillText(`${distM}m`, ringX, ringY + 28);
+        ctx.font = 'bold 11px "SFMono-Regular", Consolas, monospace';
+        ctx.fillText(`${distM}m`, ringX, ringY + 30);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '9px "SFMono-Regular", Consolas, monospace';
+        ctx.fillText(nextRing.name.toUpperCase(), ringX, ringY + 42);
         ctx.restore();
       }
-    }
-
-    // 9. Stall Warning Alert
-    if (physics.isStalling) {
-      ctx.save();
-      ctx.fillStyle = hudRed;
-      ctx.textAlign = 'center';
-      ctx.font = 'bold 18px "SFMono-Regular", Consolas, monospace';
-      ctx.fillText('STALL WARNING', cx, cy - 80);
-      ctx.restore();
     }
 
     ctx.restore();
