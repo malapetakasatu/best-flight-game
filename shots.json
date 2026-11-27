@@ -1,6 +1,6 @@
 [
-  { "name": "1-chase.jpg", "query": "?shot=chase&seed=1" },
-  { "name": "2-cockpit.jpg", "query": "?shot=cockpit&seed=1" },
-  { "name": "3-canyon.jpg", "query": "?shot=canyon&seed=1" },
-  { "name": "4-landing.jpg", "query": "?shot=landing&seed=1" }
+  { "label": "Low-level supersonic ridge chase — X-35 Valkyrie afterburner over Grand Canyon mesa, tactical lead director on target ring, Mach 1.4 HUD", "name": "1-chase.jpg", "query": "?shot=chase&seed=1" },
+  { "label": "First-person glass cockpit — collimated HUD, active artificial horizon, radar altimeter, weapon arming matrix, lit avionics panel", "name": "2-cockpit.jpg", "query": "?shot=cockpit&seed=1" },
+  { "label": "Tactical slalom canyon run — 60-degree high-G bank through narrow red rock chasm, speedbrake deployment, airspeed 480 knots", "name": "3-canyon.jpg", "query": "?shot=canyon&seed=1" },
+  { "label": "Runway 09R tactical carrier approach — glide slope lead indicator, deployed landing gear, flap indicators, threshold touchdown alignment", "name": "4-landing.jpg", "query": "?shot=landing&seed=1" }
 ]
