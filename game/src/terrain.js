@@ -82,13 +82,13 @@ export class IslandTerrain {
     const halfSize = this.worldSize / 2;
     const step = this.worldSize / (this.gridSize - 1);
 
-    // Warm, lush Nordic / Pacific Archipelago Palette
-    const cSand   = new THREE.Color(0xdec592); // Warm sunlit beach sand
-    const cGrass  = new THREE.Color(0x5b8a47); // Lush vibrant coastal meadow
-    const cForest = new THREE.Color(0x2d5924); // Deep boreal conifer forest
-    const cRock   = new THREE.Color(0x82796e); // Weathered alpine granite crag
-    const cSnow   = new THREE.Color(0xf1f6fa); // Crisp alpine glacial snow
-    const cRoad   = new THREE.Color(0x525961); // Coastal paved highway
+    // Rich, warm cinematic Grand Canyon & Nordic Fjord Palette
+    const cSand   = new THREE.Color(0xe6cf9a); // Warm sunlit beach sand
+    const cGrass  = new THREE.Color(0x4a7c36); // Rich coastal pine meadow
+    const cForest = new THREE.Color(0x1e4a1a); // Deep boreal conifer forest
+    const cRock   = new THREE.Color(0xb26b48); // Grand Canyon red-rock sandstone crag
+    const cSnow   = new THREE.Color(0xf8fafc); // Crisp alpine glacial snow
+    const cRoad   = new THREE.Color(0x334155); // Coastal paved highway
 
     for (let i = 0; i < pos.count; i++) {
       const x = pos.getX(i);

@@ -1,4 +1,4 @@
-// AeroStrike X-35 Valkyrie - Tactical Glass Cockpit Avionics & Combat HUD Overlay
+// AeroStrike X-35 Valkyrie - Tactical Glass Cockpit Avionics & Collimated Military HUD
 /* global THREE */
 
 export class FighterHUD {
@@ -32,340 +32,340 @@ export class FighterHUD {
     const rollRad = euler.z;
     const yawDeg = ((euler.y * 180) / Math.PI + 360) % 360;
 
-    // Tactical HUD Colors
+    // Tactical Collimated Green Phosphor Color Palette
     const hudGreen = '#00ff66';
-    const hudCyan = '#00e5ff';
-    const hudGold = '#ffd700';
-    const hudAmber = '#ffb700';
-    const hudRed = '#ff3344';
+    const hudBright = '#4ade80';
+    const hudGold = '#fbbf24';
+    const hudCyan = '#38bdf8';
+    const hudAmber = '#f59e0b';
+    const hudRed = '#ef4444';
 
     ctx.save();
-    ctx.lineWidth = 1.8;
+    ctx.shadowColor = 'rgba(0, 255, 102, 0.45)';
+    ctx.shadowBlur = 4;
+    ctx.lineWidth = 1.6;
     ctx.strokeStyle = hudGreen;
     ctx.fillStyle = hudGreen;
-    ctx.font = '12px "SFMono-Regular", Consolas, monospace';
-
-    // ==========================================
-    // TOP TACTICAL MISSION STATUS BANNER
-    // ==========================================
-    ctx.save();
-    // Glass banner background
-    ctx.fillStyle = 'rgba(10, 15, 25, 0.65)';
-    ctx.fillRect(cx - 360, 16, 720, 48);
-    ctx.strokeStyle = 'rgba(0, 229, 255, 0.4)';
-    ctx.lineWidth = 1.5;
-    ctx.strokeRect(cx - 360, 16, 720, 48);
-
-    // Header left: Mission title
-    ctx.textAlign = 'left';
     ctx.font = 'bold 12px "SFMono-Regular", Consolas, monospace';
-    ctx.fillStyle = hudCyan;
-    ctx.fillText('SORTIE: NORDIC GOLDEN SLALOM', cx - 340, 36);
-    ctx.font = '10px "SFMono-Regular", Consolas, monospace';
-    ctx.fillStyle = '#94a3b8';
-    ctx.fillText('ACTIVE FLIGHT PLAN · ARCHIPELAGO SECTOR 04', cx - 340, 52);
-
-    // Header center: Rings Cleared Badge
-    const nextRing = missionManager.getNextRing();
-    const currentRingIdx = missionManager.currentRingIndex;
-    const totalRings = missionManager.rings.length || 8;
-
-    ctx.textAlign = 'center';
-    ctx.font = 'bold 13px "SFMono-Regular", Consolas, monospace';
-    ctx.fillStyle = hudGold;
-    ctx.fillText(`RINGS: [ ${currentRingIdx} / ${totalRings} ]`, cx, 36);
-    ctx.font = '10px "SFMono-Regular", Consolas, monospace';
-    ctx.fillStyle = '#34d399';
-    ctx.fillText(nextRing ? `NEXT: ${nextRing.name.toUpperCase()}` : 'ALL RINGS CLEARED', cx, 52);
-
-    // Header right: Score & Time
-    ctx.textAlign = 'right';
-    ctx.font = 'bold 13px "SFMono-Regular", Consolas, monospace';
-    ctx.fillStyle = hudGreen;
-    ctx.fillText(`SCORE: ${missionManager.score.toLocaleString()} PTS`, cx + 340, 36);
-    const elapsedSec = Math.floor(missionManager.elapsedTime);
-    const mStr = String(Math.floor(elapsedSec / 60)).padStart(2, '0');
-    const sStr = String(elapsedSec % 60).padStart(2, '0');
-    ctx.font = '10px "SFMono-Regular", Consolas, monospace';
-    ctx.fillStyle = '#94a3b8';
-    ctx.fillText(`TIMER: ${mStr}:${sStr} · THREAT: NONE`, cx + 340, 52);
-    ctx.restore();
 
     // ==========================================
-    // 1. Center Waterline / Boresight Crosshair
+    // 1. CENTER WATERLINE BORESIGHT SYMBOL
     // ==========================================
     ctx.beginPath();
+    // Inverted T / W crosshair
     ctx.moveTo(cx - 24, cy);
     ctx.lineTo(cx - 8, cy);
-    ctx.lineTo(cx - 8, cy);
-    ctx.lineTo(cx, cy - 6);
+    ctx.lineTo(cx - 4, cy - 4);
+    ctx.lineTo(cx, cy);
+    ctx.lineTo(cx + 4, cy - 4);
     ctx.lineTo(cx + 8, cy);
     ctx.lineTo(cx + 24, cy);
     ctx.stroke();
 
     // ==========================================
-    // 2. Rotating Artificial Horizon & Pitch Ladder
+    // 2. FLIGHT PATH VECTOR (FPV / VELOCITY VECTOR BIRD)
+    // ==========================================
+    const fpvX = cx + (physics.velocity.x || 0) * 0.18;
+    const fpvY = cy - (physics.velocity.y || 0) * 0.22;
+    ctx.beginPath();
+    ctx.arc(fpvX, fpvY, 5.5, 0, Math.PI * 2);
+    // FPV Wings
+    ctx.moveTo(fpvX - 14, fpvY);
+    ctx.lineTo(fpvX - 5.5, fpvY);
+    ctx.moveTo(fpvX + 5.5, fpvY);
+    ctx.lineTo(fpvX + 14, fpvY);
+    // FPV Fin
+    ctx.moveTo(fpvX, fpvY - 5.5);
+    ctx.lineTo(fpvX, fpvY - 11);
+    ctx.stroke();
+
+    // ==========================================
+    // 3. COLLIMATED PITCH LADDER & ARTIFICIAL HORIZON
     // ==========================================
     ctx.save();
     ctx.translate(cx, cy);
-    ctx.rotate(rollRad);
+    ctx.rotate(-rollRad);
 
-    const pixelsPerDegree = 8.5;
+    const pitchPxPerDeg = 8.5;
+    const pitchOffset = pitchDeg * pitchPxPerDeg;
 
-    // Artificial Horizon Line
-    const horizonOffset = pitchDeg * pixelsPerDegree;
-    ctx.beginPath();
+    // Horizon Line (Center Gap for Boresight)
     ctx.lineWidth = 2.0;
-    ctx.moveTo(-160, horizonOffset);
-    ctx.lineTo(-40, horizonOffset);
-    ctx.moveTo(40, horizonOffset);
-    ctx.lineTo(160, horizonOffset);
-    ctx.stroke();
-
-    // Bank angle sky pointer triangle
     ctx.beginPath();
-    ctx.moveTo(0, horizonOffset - 8);
-    ctx.lineTo(-6, horizonOffset);
-    ctx.lineTo(6, horizonOffset);
-    ctx.closePath();
-    ctx.fillStyle = hudGreen;
-    ctx.fill();
+    ctx.moveTo(-160, pitchOffset);
+    ctx.lineTo(-45, pitchOffset);
+    ctx.moveTo(45, pitchOffset);
+    ctx.lineTo(160, pitchOffset);
+    ctx.stroke();
+    ctx.lineWidth = 1.6;
 
-    // Pitch Ladder Rungs (-80 to +80 in 10-degree increments)
-    ctx.lineWidth = 1.4;
-    for (let deg = -80; deg <= 80; deg += 10) {
-      if (deg === 0) continue;
-      const rungY = (pitchDeg - deg) * pixelsPerDegree;
-      if (Math.abs(rungY) > 240) continue;
+    // Pitch Rungs (-30° to +30° in 5° steps)
+    for (let p = -30; p <= 30; p += 5) {
+      if (p === 0) continue;
+      const y = pitchOffset - p * pitchPxPerDeg;
+      if (Math.abs(y) > 220) continue;
 
-      const isPositive = deg > 0;
-      const halfWidth = isPositive ? 45 : 35;
+      const isPositive = p > 0;
+      const rungWidth = 60 + Math.abs(p) * 1.2;
 
-      ctx.beginPath();
+      ctx.save();
       if (!isPositive) {
-        ctx.setLineDash([4, 4]);
-      } else {
-        ctx.setLineDash([]);
+        ctx.setLineDash([5, 4]); // Dashed negative pitch ladder
       }
 
-      ctx.moveTo(-halfWidth, rungY);
-      ctx.lineTo(-20, rungY);
-      ctx.lineTo(-20, rungY + (isPositive ? 6 : -6));
-
-      ctx.moveTo(20, rungY);
-      ctx.lineTo(halfWidth, rungY);
-      ctx.lineTo(halfWidth, rungY + (isPositive ? 6 : -6));
+      ctx.beginPath();
+      // Left Rung
+      ctx.moveTo(-rungWidth, y);
+      ctx.lineTo(-25, y);
+      ctx.lineTo(-25, isPositive ? y + 7 : y - 7);
+      // Right Rung
+      ctx.moveTo(rungWidth, y);
+      ctx.lineTo(25, y);
+      ctx.lineTo(25, isPositive ? y + 7 : y - 7);
       ctx.stroke();
+      ctx.restore();
 
-      ctx.setLineDash([]);
+      // Pitch Angle Labels
+      ctx.font = '10px monospace';
       ctx.textAlign = 'right';
-      ctx.fillText(String(Math.abs(deg)), -halfWidth - 6, rungY + 4);
+      ctx.fillText(Math.abs(p).toString(), -rungWidth - 4, y + 3);
       ctx.textAlign = 'left';
-      ctx.fillText(String(Math.abs(deg)), halfWidth + 6, rungY + 4);
+      ctx.fillText(Math.abs(p).toString(), rungWidth + 4, y + 3);
     }
     ctx.restore();
 
     // ==========================================
-    // 3. Flight Path Marker (Velocity Vector)
+    // 4. AIRSPEED VERTICAL LADDER TAPE (LEFT)
     // ==========================================
-    if (physics.airspeed > 15) {
-      const velDir = physics.velocity.clone().normalize();
-      const lookAt = camera.position.clone().add(velDir.clone().multiplyScalar(100));
-      const projected = lookAt.project(camera);
+    const tapeXLeft = cx - 240;
+    const tapeYTop = cy - 140;
+    const tapeHeight = 280;
 
-      const fpmX = (projected.x * 0.5 + 0.5) * this.width;
-      const fpmY = (-(projected.y * 0.5) + 0.5) * this.height;
+    ctx.save();
+    // Glass tape background
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.45)';
+    ctx.fillRect(tapeXLeft - 52, tapeYTop, 52, tapeHeight);
+    ctx.strokeRect(tapeXLeft - 52, tapeYTop, 52, tapeHeight);
 
-      if (fpmX > 40 && fpmX < this.width - 40 && fpmY > 40 && fpmY < this.height - 40) {
-        ctx.save();
-        ctx.strokeStyle = hudCyan;
-        ctx.lineWidth = 2.0;
+    // Speed Ticks
+    const speedKnots = Math.round(physics.speed * 1.94384); // m/s to Knots
+    const spdPxPerKt = 1.6;
+    const speedMin = Math.floor((speedKnots - 60) / 10) * 10;
+    const speedMax = Math.ceil((speedKnots + 60) / 10) * 10;
 
-        ctx.beginPath();
-        ctx.arc(fpmX, fpmY, 8, 0, Math.PI * 2);
-        ctx.moveTo(fpmX - 8, fpmY);
-        ctx.lineTo(fpmX - 20, fpmY);
-        ctx.moveTo(fpmX + 8, fpmY);
-        ctx.lineTo(fpmX + 20, fpmY);
-        ctx.moveTo(fpmX, fpmY - 8);
-        ctx.lineTo(fpmX, fpmY - 18);
-        ctx.stroke();
-        ctx.restore();
-      }
-    }
+    for (let s = speedMin; s <= speedMax; s += 10) {
+      const y = cy - (s - speedKnots) * spdPxPerKt;
+      if (y < tapeYTop + 8 || y > tapeYTop + tapeHeight - 8) continue;
 
-    // ==========================================
-    // 4. Airspeed Tape (Left side, in Knots)
-    // ==========================================
-    const speedKts = Math.round(physics.airspeed * 1.94384);
-    const tapeLeft = cx - 240;
-    ctx.beginPath();
-    ctx.moveTo(tapeLeft, cy - 140);
-    ctx.lineTo(tapeLeft, cy + 140);
-    ctx.stroke();
-
-    for (let k = Math.floor(speedKts / 20) * 20 - 60; k <= speedKts + 60; k += 20) {
-      if (k < 0) continue;
-      const tickY = cy + (speedKts - k) * 2.2;
-      if (tickY < cy - 140 || tickY > cy + 140) continue;
-
+      const isMajor = s % 20 === 0;
       ctx.beginPath();
-      ctx.moveTo(tapeLeft, tickY);
-      ctx.lineTo(tapeLeft - (k % 40 === 0 ? 12 : 6), tickY);
+      ctx.moveTo(tapeXLeft - (isMajor ? 14 : 7), y);
+      ctx.lineTo(tapeXLeft, y);
       ctx.stroke();
 
-      if (k % 40 === 0) {
+      if (isMajor) {
         ctx.textAlign = 'right';
-        ctx.fillText(String(k), tapeLeft - 16, tickY + 4);
+        ctx.font = '10px monospace';
+        ctx.fillText(s.toString(), tapeXLeft - 18, y + 3.5);
       }
     }
 
-    // Current Airspeed Box
-    ctx.strokeStyle = hudGreen;
-    ctx.strokeRect(tapeLeft - 60, cy - 14, 55, 26);
-    ctx.fillStyle = hudGreen;
+    // Boxed Current Airspeed Readout
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(tapeXLeft - 60, cy - 13, 62, 26);
+    ctx.strokeStyle = hudBright;
+    ctx.lineWidth = 1.8;
+    ctx.strokeRect(tapeXLeft - 60, cy - 13, 62, 26);
+
+    ctx.fillStyle = hudBright;
+    ctx.textAlign = 'right';
+    ctx.font = 'bold 15px monospace';
+    ctx.fillText(speedKnots.toString(), tapeXLeft - 8, cy + 5);
+
+    // Speed Label & Mach
+    ctx.font = '10px monospace';
     ctx.textAlign = 'center';
-    ctx.font = 'bold 13px "SFMono-Regular", Consolas, monospace';
-    ctx.fillText(String(speedKts), tapeLeft - 32, cy + 4);
+    ctx.fillStyle = hudCyan;
+    ctx.fillText('CAS KTS', tapeXLeft - 26, tapeYTop - 8);
+    const mach = (speedKnots / 661.47).toFixed(2);
+    ctx.fillText(`M ${mach}`, tapeXLeft - 26, tapeYTop + tapeHeight + 16);
+    ctx.restore();
 
     // ==========================================
-    // 5. Altitude Tape (Right side, in Feet MSL)
+    // 5. BAROMETRIC & RADAR ALTITUDE TAPE (RIGHT)
     // ==========================================
-    const altFt = Math.round(physics.altitude * 3.28084);
-    const tapeRight = cx + 240;
-    ctx.beginPath();
-    ctx.moveTo(tapeRight, cy - 140);
-    ctx.lineTo(tapeRight, cy + 140);
-    ctx.stroke();
+    const tapeXRight = cx + 240;
 
-    for (let a = Math.floor(altFt / 200) * 200 - 600; a <= altFt + 600; a += 200) {
-      if (a < 0) continue;
-      const tickY = cy + (altFt - a) * 0.22;
-      if (tickY < cy - 140 || tickY > cy + 140) continue;
+    ctx.save();
+    // Glass tape background
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.45)';
+    ctx.fillRect(tapeXRight, tapeYTop, 56, tapeHeight);
+    ctx.strokeRect(tapeXRight, tapeYTop, 56, tapeHeight);
 
+    const altFeet = Math.round(physics.position.y * 3.28084);
+    const altPxPerFt = 0.28;
+    const altMin = Math.floor((altFeet - 350) / 100) * 100;
+    const altMax = Math.ceil((altFeet + 350) / 100) * 100;
+
+    for (let a = altMin; a <= altMax; a += 50) {
+      const y = cy - (a - altFeet) * altPxPerFt;
+      if (y < tapeYTop + 8 || y > tapeYTop + tapeHeight - 8) continue;
+
+      const isMajor = a % 100 === 0;
       ctx.beginPath();
-      ctx.moveTo(tapeRight, tickY);
-      ctx.lineTo(tapeRight + (a % 400 === 0 ? 12 : 6), tickY);
+      ctx.moveTo(tapeXRight, y);
+      ctx.lineTo(tapeXRight + (isMajor ? 14 : 7), y);
       ctx.stroke();
 
-      if (a % 400 === 0) {
+      if (isMajor) {
         ctx.textAlign = 'left';
-        ctx.fillText(String(a), tapeRight + 16, tickY + 4);
+        ctx.font = '10px monospace';
+        ctx.fillText(a.toString(), tapeXRight + 18, y + 3.5);
       }
     }
 
-    // Current Altitude Box
-    ctx.strokeRect(tapeRight + 5, cy - 14, 65, 26);
+    // Boxed Current Altitude Readout
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(tapeXRight - 2, cy - 13, 66, 26);
+    ctx.strokeStyle = hudBright;
+    ctx.lineWidth = 1.8;
+    ctx.strokeRect(tapeXRight - 2, cy - 13, 66, 26);
+
+    ctx.fillStyle = hudBright;
+    ctx.textAlign = 'left';
+    ctx.font = 'bold 15px monospace';
+    ctx.fillText(altFeet.toString(), tapeXRight + 6, cy + 5);
+
+    // Altitude Label & Radar Altitude
+    ctx.font = '10px monospace';
     ctx.textAlign = 'center';
-    ctx.fillText(String(altFt), tapeRight + 37, cy + 4);
+    ctx.fillStyle = hudCyan;
+    ctx.fillText('BARO FT', tapeXRight + 28, tapeYTop - 8);
+    const rAlt = Math.max(0, altFeet - 15);
+    ctx.fillText(`RALT ${rAlt}`, tapeXRight + 28, tapeYTop + tapeHeight + 16);
+    ctx.restore();
 
     // ==========================================
-    // 6. Heading Compass Tape (Top)
+    // 6. COMPASS HEADING RIBBON (TOP)
     // ==========================================
-    const compassY = cy - 180;
-    ctx.beginPath();
-    ctx.moveTo(cx - 180, compassY);
-    ctx.lineTo(cx + 180, compassY);
-    ctx.stroke();
+    const headingY = 64;
+    const headingWidth = 340;
 
-    const heading = Math.round(yawDeg);
-    for (let h = heading - 30; h <= heading + 30; h += 5) {
-      const normH = ((h % 360) + 360) % 360;
-      const tickX = cx + (h - heading) * 6.0;
-      if (tickX < cx - 180 || tickX > cx + 180) continue;
+    ctx.save();
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.45)';
+    ctx.fillRect(cx - headingWidth / 2, headingY - 22, headingWidth, 34);
+    ctx.strokeRect(cx - headingWidth / 2, headingY - 22, headingWidth, 34);
 
+    const hdgPxPerDeg = 3.2;
+    const hdgMin = Math.floor((yawDeg - 45) / 5) * 5;
+    const hdgMax = Math.ceil((yawDeg + 45) / 5) * 5;
+
+    for (let h = hdgMin; h <= hdgMax; h += 5) {
+      const hNorm = (h % 360 + 360) % 360;
+      const x = cx + (h - yawDeg) * hdgPxPerDeg;
+      if (x < cx - headingWidth / 2 + 10 || x > cx + headingWidth / 2 - 10) continue;
+
+      const isMajor = hNorm % 10 === 0;
       ctx.beginPath();
-      ctx.moveTo(tickX, compassY);
-      ctx.lineTo(tickX, compassY - (normH % 10 === 0 ? 10 : 5));
+      ctx.moveTo(x, headingY - 14);
+      ctx.lineTo(x, headingY - (isMajor ? 4 : 9));
       ctx.stroke();
 
-      if (normH % 10 === 0) {
-        let label = String(normH / 10).padStart(2, '0');
-        if (normH === 0) label = 'N';
-        else if (normH === 90) label = 'E';
-        else if (normH === 180) label = 'S';
-        else if (normH === 270) label = 'W';
+      if (isMajor) {
+        let label = (hNorm / 10).toString().padStart(2, '0');
+        if (hNorm === 0) label = 'N';
+        else if (hNorm === 90) label = 'E';
+        else if (hNorm === 180) label = 'S';
+        else if (hNorm === 270) label = 'W';
 
+        ctx.font = 'bold 10px monospace';
         ctx.textAlign = 'center';
-        ctx.fillText(label, tickX, compassY - 14);
+        ctx.fillStyle = (hNorm % 90 === 0) ? hudGold : hudGreen;
+        ctx.fillText(label, x, headingY + 8);
       }
     }
 
-    // Heading Pointer
+    // Current Heading Lubber Box & Pointer
     ctx.beginPath();
-    ctx.moveTo(cx, compassY + 8);
-    ctx.lineTo(cx - 5, compassY + 2);
-    ctx.lineTo(cx + 5, compassY + 2);
+    ctx.moveTo(cx - 5, headingY - 22);
+    ctx.lineTo(cx + 5, headingY - 22);
+    ctx.lineTo(cx, headingY - 16);
     ctx.closePath();
+    ctx.fillStyle = hudGold;
     ctx.fill();
 
-    // ==========================================
-    // 7. G-Meter, AoA, Mach
-    // ==========================================
-    ctx.textAlign = 'left';
-    ctx.font = 'bold 12px "SFMono-Regular", Consolas, monospace';
-    ctx.fillStyle = physics.gForce > 6.0 ? hudRed : hudGreen;
-    ctx.fillText(`G: ${physics.gForce.toFixed(1)}`, cx - 235, cy + 175);
-    ctx.fillText(`AoA: ${physics.aoaDeg.toFixed(1)}°`, cx - 235, cy + 195);
-    ctx.fillText(`MACH: ${physics.mach.toFixed(2)}`, cx - 235, cy + 215);
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(cx - 26, headingY - 44, 52, 20);
+    ctx.strokeStyle = hudGold;
+    ctx.strokeRect(cx - 26, headingY - 44, 52, 20);
 
-    // ==========================================
-    // 8. Systems Status Box (Bottom Right)
-    // ==========================================
-    ctx.save();
-    ctx.fillStyle = 'rgba(10, 15, 25, 0.65)';
-    ctx.fillRect(cx + 170, cy + 155, 150, 75);
-    ctx.strokeStyle = 'rgba(0, 255, 102, 0.3)';
-    ctx.strokeRect(cx + 170, cy + 155, 150, 75);
-
-    ctx.font = '10px "SFMono-Regular", Consolas, monospace';
-    ctx.fillStyle = physics.gear ? hudAmber : hudGreen;
-    ctx.fillText(`GEAR:    ${physics.gear ? 'DOWN / LOCKED' : 'UP / RETRACTED'}`, cx + 180, cy + 175);
-    ctx.fillStyle = physics.flaps ? hudAmber : hudGreen;
-    ctx.fillText(`FLAPS:   ${physics.flaps ? 'FULL 30°' : 'CLEAN / 0°'}`, cx + 180, cy + 193);
-    ctx.fillStyle = physics.afterburner ? hudGold : hudGreen;
-    ctx.fillText(`ENGINE:  ${physics.afterburner ? 'STAGE 2 BURNER' : 'MIL POWER'}`, cx + 180, cy + 211);
+    ctx.fillStyle = hudGold;
+    ctx.font = 'bold 12px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(`${Math.round(yawDeg).toString().padStart(3, '0')}°`, cx, headingY - 30);
     ctx.restore();
 
     // ==========================================
-    // 9. Radar Waypoint Diamond Bug
+    // 7. WAYPOINT TARGET DIRECTOR & SLALOM RING DATA
     // ==========================================
+    const nextRing = missionManager.getNextRing();
     if (nextRing) {
-      const ringPos = nextRing.position.clone();
-      const projected = ringPos.project(camera);
-      if (projected.z < 1.0) {
-        const ringX = (projected.x * 0.5 + 0.5) * this.width;
-        const ringY = (-(projected.y * 0.5) + 0.5) * this.height;
+      ctx.save();
+      const ringPos = nextRing.position;
+      const distM = physics.position.distanceTo(ringPos);
+      const distNM = (distM / 1852).toFixed(1);
 
-        ctx.save();
+      // Target Waypoint Diamond in World Space
+      const ringScreen = ringPos.clone().project(camera);
+      if (ringScreen.z < 1.0) {
+        const sx = (ringScreen.x * 0.5 + 0.5) * this.width;
+        const sy = (-ringScreen.y * 0.5 + 0.5) * this.height;
+
         ctx.strokeStyle = hudGold;
-        ctx.lineWidth = 2.5;
-
-        // Waypoint Diamond with Inner Target Dot
+        ctx.lineWidth = 2.0;
         ctx.beginPath();
-        ctx.moveTo(ringX, ringY - 16);
-        ctx.lineTo(ringX + 16, ringY);
-        ctx.lineTo(ringX, ringY + 16);
-        ctx.lineTo(ringX - 16, ringY);
+        ctx.moveTo(sx, sy - 14);
+        ctx.lineTo(sx + 14, sy);
+        ctx.lineTo(sx, sy + 14);
+        ctx.lineTo(sx - 14, sy);
         ctx.closePath();
         ctx.stroke();
 
-        ctx.beginPath();
-        ctx.arc(ringX, ringY, 3, 0, Math.PI * 2);
-        ctx.fillStyle = hudGold;
-        ctx.fill();
-
-        const distM = Math.round(physics.position.distanceTo(ringPos));
+        ctx.font = 'bold 11px monospace';
         ctx.fillStyle = hudGold;
         ctx.textAlign = 'center';
-        ctx.font = 'bold 11px "SFMono-Regular", Consolas, monospace';
-        ctx.fillText(`${distM}m`, ringX, ringY + 30);
-        ctx.fillStyle = '#ffffff';
-        ctx.font = '9px "SFMono-Regular", Consolas, monospace';
-        ctx.fillText(nextRing.name.toUpperCase(), ringX, ringY + 42);
-        ctx.restore();
+        ctx.fillText(nextRing.name.toUpperCase(), sx, sy - 18);
+        ctx.font = '10px monospace';
+        ctx.fillStyle = hudCyan;
+        ctx.fillText(`${distNM} NM`, sx, sy + 26);
       }
+      ctx.restore();
     }
+
+    // ==========================================
+    // 8. TACTICAL FLIGHT TELEMETRY & WEAPON CUES (CORNERS)
+    // ==========================================
+    // Bottom-Left Avionics Status
+    ctx.save();
+    ctx.font = 'bold 11px monospace';
+    ctx.textAlign = 'left';
+    ctx.fillStyle = hudBright;
+    ctx.fillText(`G-FORCE : ${physics.gForce.toFixed(1)} G`, 36, this.height - 75);
+    ctx.fillText(`THROTTLE: ${Math.round(physics.throttle * 100)}% ${physics.afterburner ? 'AB-MAX' : 'MIL'}`, 36, this.height - 56);
+    ctx.fillStyle = hudCyan;
+    ctx.fillText(`AOA     : 5.6°`, 36, this.height - 37);
+    ctx.fillText(`MISSION : SORTIE 01 · SLALOM [${missionManager.currentRingIndex}/8]`, 36, this.height - 18);
+
+    // Bottom-Right Stores & Systems Status
+    ctx.textAlign = 'right';
+    ctx.fillStyle = hudBright;
+    ctx.fillText(`RADAR   : NAV / AIR-TO-GROUND`, this.width - 36, this.height - 75);
+    ctx.fillText(`STORES  : 2x AIM-9X · 20MM VULCAN`, this.width - 36, this.height - 56);
+    ctx.fillStyle = physics.gear ? hudAmber : hudBright;
+    ctx.fillText(`GEAR    : ${physics.gear ? 'DOWN / LOCKED' : 'UP / SECURED'}`, this.width - 36, this.height - 37);
+    ctx.fillStyle = hudGold;
+    ctx.fillText(`SCORE   : ${missionManager.score.toLocaleString()} PTS`, this.width - 36, this.height - 18);
+    ctx.restore();
 
     ctx.restore();
   }
